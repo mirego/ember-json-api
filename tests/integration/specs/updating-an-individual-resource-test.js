@@ -1,4 +1,5 @@
-var get = Ember.get, set = Ember.set;
+var get = Ember.get,
+  set = Ember.set;
 var env;
 var responses, fakeServer;
 
@@ -11,7 +12,9 @@ module('integration/specs/updating-an-individual-resource', {
         data: {
           type: 'posts',
           id: '1',
-          title: 'Rails is Omakase',
+          attributes: {
+            title: 'Rails is Omakase'
+          },
           links: {
             author: {
               self: '/posts/1/links/author',
@@ -25,23 +28,29 @@ module('integration/specs/updating-an-individual-resource', {
         data: {
           type: 'authors',
           id: '1',
-          name: 'dhh'
+          attributes: {
+            name: 'dhh'
+          }
         }
       },
       postAfterUpdate: {
         data: {
           type: 'posts',
           id: '1',
-          title: 'TDD Is Dead lol',
-          'post-summary': 'summary'
+          attributes: {
+            title: 'TDD Is Dead lol',
+            'post-summary': 'summary'
+          }
         }
       },
       postAfterUpdateAuthor: {
         data: {
           type: 'posts',
           id: '1',
-          title: 'TDD Is Dead lol',
-          'post-summary': 'summary',
+          attributes: {
+            title: 'TDD Is Dead lol',
+            'post-summary': 'summary'
+          },
           links: {
             author: {
               self: '/posts/1/links/author',
@@ -75,8 +84,10 @@ asyncTest("PATCH /posts/1 won't push an array", function() {
   var request = {
     data: {
       id: '1',
-      title: 'TDD Is Dead lol',
-      'post-summary': null,
+      attributes: {
+        title: 'TDD Is Dead lol',
+        'post-summary': null
+      },
       links: {
         comments: {
           linkage: []
@@ -108,8 +119,10 @@ asyncTest("Update a post with an author", function() {
   var request = {
     data: {
       id: '1',
-      title: 'TDD Is Dead lol',
-      'post-summary': null,
+      attributes: {
+        title: 'TDD Is Dead lol',
+        'post-summary': null,
+      },
       links: {
         comments: {
           linkage: []

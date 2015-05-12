@@ -3,9 +3,9 @@ var stubServer = function() {
   DS._routes = Ember.create(null);
 
   pretender.unhandledRequest = function(verb, path, request) {
-    var string = "Pretender: non-existing "+verb+" "+path, request
+    var string = "Pretender: non-existing " + verb + " " + path, request
     console.error(string);
-    throw(string);
+    throw (string);
   };
 
   return {
@@ -19,9 +19,11 @@ var stubServer = function() {
     get: function(url, response) {
       this.validatePayload(response, 'GET', url);
 
-      this.pretender.get(url, function(request){
+      this.pretender.get(url, function(request) {
         var string = JSON.stringify(response);
-        return [200, {"Content-Type": "application/json"}, string]
+        return [200, {
+          "Content-Type": "application/json"
+        }, string]
       });
     },
 
@@ -36,11 +38,13 @@ var stubServer = function() {
         response: response
       });
 
-      this.pretender.post(url, function(request){
+      this.pretender.post(url, function(request) {
         var responseForRequest = _this.responseForRequest('post', request);
 
         var string = JSON.stringify(responseForRequest);
-        return [201, {"Content-Type": "application/json"}, string]
+        return [201, {
+          "Content-Type": "application/json"
+        }, string]
       });
     },
 
@@ -55,11 +59,13 @@ var stubServer = function() {
         response: response
       });
 
-      this.pretender.patch(url, function(request){
+      this.pretender.patch(url, function(request) {
         var responseForRequest = _this.responseForRequest('patch', request);
 
         var string = JSON.stringify(responseForRequest);
-        return [200, {"Content-Type": "application/json"}, string]
+        return [200, {
+          "Content-Type": "application/json"
+        }, string]
       });
     },
 
@@ -71,18 +77,25 @@ var stubServer = function() {
      * If it doesn't exist, we throw errors (and rocks).
      */
     responseForRequest: function(verb, currentRequest) {
+      var sortString = function(s) {
+        var c = [];
+        var l = s.length;
+        for (var i = 0; i < l; i++) {
+            c.push(s[i]);
+        }
+        return c.sort().join('');
+      };
       var respectiveResponse;
       var availableRequests = this.availableRequests[verb];
-      var actualRequest = JSON.stringify(JSON.parse(currentRequest.requestBody));
+      var actualRequest = sortString(JSON.stringify(JSON.parse(currentRequest.requestBody)));
 
       for (requests in availableRequests) {
-        if (!availableRequests.hasOwnProperty(requests))
-          continue;
+        if (!availableRequests.hasOwnProperty(requests)) continue;
 
-        var request = JSON.stringify(availableRequests[requests].request);
+        var request = sortString(JSON.stringify(availableRequests[requests].request));
         var response = JSON.stringify(availableRequests[requests].response);
 
-        if (actualRequest === request) {
+        if (request === actualRequest) {
           respectiveResponse = availableRequests[requests].response;
           break;
         }
@@ -91,28 +104,27 @@ var stubServer = function() {
       if (respectiveResponse) {
         return respectiveResponse;
       } else {
-        var error = "No response defined for "+verb+" request";
-        console.error(error, actualRequest);
+        var error = "No response defined for " + verb + " request";
+        console.error(error, JSON.stringify(JSON.parse(currentRequest.requestBody)));
 
         if (availableRequests.length) {
           console.log("Current defined requests:");
           for (requests in availableRequests) {
-            if (!availableRequests.hasOwnProperty(requests))
-              continue;
+            if (!availableRequests.hasOwnProperty(requests)) continue;
 
             console.log(JSON.stringify(availableRequests[requests].request));
           }
         }
 
-        throw(error);
+        throw (error);
       }
     },
 
     validatePayload: function(response, verb, url) {
       if (!response) {
-        var string = "No request or response defined for "+verb+" "+url;
+        var string = "No request or response defined for " + verb + " " + url;
         console.warn(string);
-        throw(string);
+        throw (string);
       }
     }
   };
