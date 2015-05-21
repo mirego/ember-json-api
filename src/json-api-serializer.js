@@ -5,19 +5,21 @@ var HOST = /(^https?:\/\/.*?)(\/.*)/;
 
 DS.JsonApiSerializer = DS.RESTSerializer.extend({
 
+  shouldDasherizeKeys: true,
+
   primaryRecordKey: 'data',
   sideloadedRecordsKey: 'included',
   relationshipKey: 'self',
   relatedResourceKey: 'related',
 
   keyForAttribute: function(key) {
-    return Ember.String.dasherize(key);
+    return this.shouldDasherizeKeys ? Ember.String.dasherize(key) : key;
   },
   keyForRelationship: function(key) {
-    return Ember.String.dasherize(key);
+    return this.shouldDasherizeKeys ? Ember.String.dasherize(key) : key;
   },
   keyForSnapshot: function(snapshot) {
-    return Ember.String.dasherize(snapshot.typeKey);
+    return this.shouldDasherizeKeys ? Ember.String.dasherize(snapshot.typeKey) : snapshot.typeKey;
   },
 
   /**

@@ -14,6 +14,9 @@ define("json-api-adapter",
     DS._routes = Ember.create(null);
 
     DS.JsonApiAdapter = DS.RESTAdapter.extend({
+
+      shouldDasherizeKeys: true,
+
       defaultSerializer: 'DS/jsonApi',
 
       contentType: 'application/vnd.api+json; charset=utf-8',
@@ -173,8 +176,8 @@ define("json-api-adapter",
       },
 
       pathForType: function(type) {
-        var dasherized = Ember.String.dasherize(type);
-        return Ember.String.pluralize(dasherized);
+        var modifiedType = this.shouldDasherizeKeys ? Ember.String.dasherize(type) : type;
+        return Ember.String.pluralize(modifiedType);
       }
     });
 
@@ -203,19 +206,21 @@ define("json-api-adapter",
 
     DS.JsonApiSerializer = DS.RESTSerializer.extend({
 
+      shouldDasherizeKeys: true,
+
       primaryRecordKey: 'data',
       sideloadedRecordsKey: 'included',
       relationshipKey: 'self',
       relatedResourceKey: 'related',
 
       keyForAttribute: function(key) {
-        return Ember.String.dasherize(key);
+        return this.shouldDasherizeKeys ? Ember.String.dasherize(key) : key;
       },
       keyForRelationship: function(key) {
-        return Ember.String.dasherize(key);
+        return this.shouldDasherizeKeys ? Ember.String.dasherize(key) : key;
       },
       keyForSnapshot: function(snapshot) {
-        return Ember.String.dasherize(snapshot.typeKey);
+        return this.shouldDasherizeKeys ? Ember.String.dasherize(snapshot.typeKey) : snapshot.typeKey;
       },
 
       /**
@@ -230,6 +235,13 @@ define("json-api-adapter",
             continue;
           }
 
+          if (key === 'attributes') {
+            for (var attributeKey in hash[key]) {
+              var camelizedKey = Ember.String.camelize(attributeKey);
+              json[camelizedKey] = hash[key][attributeKey];
+            }
+            continue;
+          }
           var camelizedKey = Ember.String.camelize(key);
           json[camelizedKey] = hash[key];
         }
@@ -379,6 +391,14 @@ define("json-api-adapter",
 
       serialize: function(snapshot, options) {
         var data = this._super(snapshot, options);
+        data['attributes'] = {};
+        for (var key in data) {
+          if (key === 'links' || key === 'attributes') {
+            continue;
+          }
+          data['attributes'][key] = data[key];
+          delete data[key];
+        }
         if(!data.hasOwnProperty('type') && options && options.type) {
           data.type = Ember.String.pluralize(this.keyForRelationship(options.type));
         }

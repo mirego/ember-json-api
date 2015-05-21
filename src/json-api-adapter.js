@@ -10,6 +10,9 @@ var get = Ember.get;
 DS._routes = Ember.create(null);
 
 DS.JsonApiAdapter = DS.RESTAdapter.extend({
+
+  shouldDasherizeKeys: true,
+
   defaultSerializer: 'DS/jsonApi',
 
   contentType: 'application/vnd.api+json; charset=utf-8',
@@ -169,8 +172,8 @@ DS.JsonApiAdapter = DS.RESTAdapter.extend({
   },
 
   pathForType: function(type) {
-    var dasherized = Ember.String.dasherize(type);
-    return Ember.String.pluralize(dasherized);
+    var modifiedType = this.shouldDasherizeKeys ? Ember.String.dasherize(type) : type;
+    return Ember.String.pluralize(modifiedType);
   }
 });
 
