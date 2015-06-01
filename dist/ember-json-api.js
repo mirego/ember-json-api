@@ -176,7 +176,7 @@ define("json-api-adapter",
       },
 
       pathForType: function(type) {
-        var modifiedType = this.shouldDasherizeKeys ? Ember.String.dasherize(type) : type;
+        var modifiedType = this.shouldDasherizeKeys ? Ember.String.dasherize(type) : Ember.String.camelize(type);
         return Ember.String.pluralize(modifiedType);
       }
     });
