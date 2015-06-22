@@ -207,6 +207,7 @@ define("json-api-adapter",
     DS.JsonApiSerializer = DS.RESTSerializer.extend({
 
       shouldDasherizeKeys: true,
+      shouldStoreLinksInMeta: true,
 
       primaryRecordKey: 'data',
       sideloadedRecordsKey: 'included',
@@ -264,12 +265,9 @@ define("json-api-adapter",
           delete payload[this.primaryRecordKey];
         }
         if (payload.meta) {
-          this.extractMeta(payload.meta);
           delete payload.meta;
         }
         if (payload.links) {
-          // FIXME Need to handle top level links, like pagination
-          //this.extractRelationships(payload.links, payload);
           delete payload.links;
         }
         if (payload[this.sideloadedRecordsKey]) {
@@ -278,6 +276,26 @@ define("json-api-adapter",
         }
 
         return payload;
+      },
+
+      /**
+      * Extract meta. Also store links into the meta data for type if requested.
+      */
+      extractMeta: function(store, typeClass, payload) {
+        if (!payload) {
+          return;
+        }
+
+        var metaForType = store.metadataFor(typeClass);
+        if (payload.meta) {
+          Ember.merge(metaForType, payload.meta);
+        }
+        if (this.shouldStoreLinksInMeta && payload.links) {
+          metaForType.links = {};
+          Ember.merge(metaForType.links, payload.links);
+        }
+
+        store.setMetadataFor(typeClass, metaForType);
       },
 
       extractArray: function(store, type, arrayPayload, id, requestType) {

@@ -85,7 +85,7 @@ DS.JsonApiSerializer = DS.RESTSerializer.extend({
       return;
     }
 
-    let metaForType = store.metadataFor(typeClass);
+    var metaForType = store.metadataFor(typeClass);
     if (payload.meta) {
       Ember.merge(metaForType, payload.meta);
     }
@@ -93,6 +93,7 @@ DS.JsonApiSerializer = DS.RESTSerializer.extend({
       metaForType.links = {};
       Ember.merge(metaForType.links, payload.links);
     }
+
     store.setMetadataFor(typeClass, metaForType);
   },
 
