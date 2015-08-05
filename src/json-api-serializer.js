@@ -278,7 +278,7 @@ function belongsToLink(key, type, value) {
   return {
     linkage: {
       id: value,
-      type: Ember.String.pluralize(type)
+      type: Ember.String.camelize(Ember.String.pluralize(type))
     }
   };
 }
