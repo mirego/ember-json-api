@@ -225,13 +225,13 @@ define("json-api-adapter",
       },
 
       /**
-       * Flatten links
+       * Flatten relationships
        */
       normalize: function(type, hash, prop) {
         var json = {};
         for (var key in hash) {
           // This is already normalized
-          if (key === 'links') {
+          if (key === 'relationships') {
             json[key] = hash[key];
             continue;
           }
@@ -307,9 +307,9 @@ define("json-api-adapter",
        * Extract top-level "data" containing a single primary data
        */
       extractSingleData: function(data, payload) {
-        if(data.links) {
-          this.extractRelationships(data.links, data);
-          //delete data.links;
+        if(data.relationships) {
+          this.extractRelationships(data.relationships, data);
+          //delete data.relationships;
         }
         payload[data.type] = data;
         delete data.type;
@@ -322,9 +322,9 @@ define("json-api-adapter",
         var type = data.length > 0 ? data[0].type : null;
         var serializer = this;
         data.forEach(function(item) {
-          if(item.links) {
-            serializer.extractRelationships(item.links, item);
-            //delete data.links;
+          if(item.relationships) {
+            serializer.extractRelationships(item.relationships, item);
+            //delete data.relationships;
           }
         });
 
@@ -339,33 +339,33 @@ define("json-api-adapter",
         var models = {};
         var serializer = this;
 
-        sideloaded.forEach(function(link) {
-          var type = link.type;
-          if(link.links) {
-            serializer.extractRelationships(link.links, link);
+        sideloaded.forEach(function(relationship) {
+          var type = relationship.type;
+          if(relationship.relationships) {
+            serializer.extractRelationships(relationship.relationships, relationship);
           }
-          delete link.type;
+          delete relationship.type;
           if(!models[type]) {
             models[type] = [];
           }
-          models[type].push(link);
+          models[type].push(relationship);
         });
 
         this.pushPayload(store, models);
       },
 
       /**
-       * Parse the top-level "links" object.
+       * Parse the top-level "relationships" object.
        */
-      extractRelationships: function(links, resource) {
-        var link, association, id, route, relationshipLink, cleanedRoute;
+      extractRelationships: function(relationships, resource) {
+        var relationship, association, id, route, relationshipLink, cleanedRoute;
 
         // Clear the old format
-        resource.links = {};
+        resource.relationships = {};
 
-        for (link in links) {
-          association = links[link];
-          link = Ember.String.camelize(link.split('.').pop());
+        for (relationship in relationships) {
+          association = relationships[relationship];
+          relationship = Ember.String.camelize(relationship.split('.').pop());
           if(!association) { continue; }
           if (typeof association === 'string') {
             if (association.indexOf('/') > -1) {
@@ -379,26 +379,26 @@ define("json-api-adapter",
           } else {
             relationshipLink =  association[this.relationshipKey];
             route = association[this.relatedResourceKey];
-            id = getLinkageId(association.linkage);
+            id = getLinkageId(association.data);
           }
 
           if (route) {
             cleanedRoute = this.removeHost(route);
-            resource.links[link] = cleanedRoute;
+            resource.relationships[relationship] = cleanedRoute;
 
             // Need clarification on how this is used
             if(cleanedRoute.indexOf('{') > -1) {
-              DS._routes[link] = cleanedRoute.replace(/^\//, '');
+              DS._routes[relationship] = cleanedRoute.replace(/^\//, '');
             }
           }
           if(id) {
-            resource[link] = id;
+            resource[relationship] = id;
           }
           if(relationshipLink) {
-            resource.links[link + '--self'] = this.removeHost(relationshipLink);
+            resource.relationships[relationship + '--self'] = this.removeHost(relationshipLink);
           }
         }
-        return resource.links;
+        return resource.relationships;
       },
 
       removeHost: function(url) {
@@ -411,7 +411,7 @@ define("json-api-adapter",
         var data = this._super(snapshot, options);
         data['attributes'] = {};
         for (var key in data) {
-          if (key === 'links' || key === 'attributes') {
+          if (key === 'relationships' || key === 'attributes') {
             continue;
           }
           data['attributes'][key] = data[key];
@@ -442,7 +442,7 @@ define("json-api-adapter",
       },
 
       /**
-       * Use "links" key, remove support for polymorphic type
+       * Use "relationships" key, remove support for polymorphic type
        */
       serializeBelongsTo: function(record, json, relationship) {
         var attr = relationship.key;
@@ -454,12 +454,12 @@ define("json-api-adapter",
         type = this.keyForSnapshot(belongsTo);
         key = this.keyForRelationship(attr);
 
-        json.links = json.links || {};
-        json.links[key] = belongsToLink(key, type, get(belongsTo, 'id'));
+        json.relationships = json.relationships || {};
+        json.relationships[key] = belongsToLink(key, type, get(belongsTo, 'id'));
       },
 
       /**
-       * Use "links" key
+       * Use "relationships" key
        */
       serializeHasMany: function(record, json, relationship) {
         var attr = relationship.key;
@@ -467,8 +467,8 @@ define("json-api-adapter",
         var key = this.keyForRelationship(attr);
 
         if (relationship.kind === 'hasMany') {
-          json.links = json.links || {};
-          json.links[key] = hasManyLink(key, type, record, attr);
+          json.relationships = json.relationships || {};
+          json.relationships[key] = hasManyLink(key, type, record, attr);
         }
       }
     });
@@ -477,9 +477,9 @@ define("json-api-adapter",
       if(!value) { return value; }
 
       return {
-        linkage: {
+        data: {
           id: value,
-          type: Ember.String.pluralize(type)
+          type: Ember.String.camelize(Ember.String.pluralize(type))
         }
       };
     }
@@ -497,7 +497,7 @@ define("json-api-adapter",
         });
       }
 
-      return { linkage: linkages };
+      return { data: linkages };
     }
 
     function normalizeLinkage(linkage) {
